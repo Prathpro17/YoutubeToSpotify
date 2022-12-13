@@ -4,6 +4,7 @@ from spotipy.oauth2 import SpotifyOAuth, SpotifyOauthError
 import spotipy
 from urllib import parse
 from colorama import Fore
+import os
 
 
 DEVELOPER_KEY = None
@@ -51,6 +52,9 @@ def create_playlist(name: str, description: str = None, public: bool = False, co
 
 
 if __name__ == "__main__":
+    
+    if not os.path.exists('./tokens'):
+        os.makedirs('./tokens')
     
     try:
         
