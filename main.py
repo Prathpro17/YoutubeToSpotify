@@ -1,9 +1,10 @@
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
-from spotipy.oauth2 import SpotifyOAuth, SpotifyOauthError
+
 import spotipy
+from spotipy.oauth2 import SpotifyOAuth, SpotifyOauthError
+
 from urllib import parse
-from colorama import Fore
 import os
 
 
@@ -12,6 +13,11 @@ YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 SPOTIFY_KEY = None
 SPOTIFY_USER_ID = None
+
+RED = '\33[31m'
+GREEN = '\33[32m'
+ITALIC = '\33[3m'
+RESET = '\33[m'
 
 
 def get_playlist_id(playlist_url: str):
@@ -72,7 +78,8 @@ if __name__ == "__main__":
         
         playlist = create_playlist(name = 'Autocreated Playlist')
 
-        failed_songs = []
+        failed = []
+        unsure = []
 
         for vid in youtubedata['items']:
             vid_name = vid['snippet']['title']
@@ -82,15 +89,24 @@ if __name__ == "__main__":
                 spotify_track_name = spotify_name['tracks']['items'][0]['name']
                 print(f"Spotify track name: \"{spotify_track_name}\"")
                 spotify_uri = spotify_name['tracks']['items'][0]['uri']
-                spotify.playlist_add_items(playlist_id = playlist['id'], items = [spotify_uri])
-                print(f"{Fore.GREEN}Successfully{Fore.RESET} added {spotify_track_name}!")
+                if spotify_track_name in vid_name:
+                    spotify.playlist_add_items(playlist_id = playlist['id'], items = [spotify_uri])
+                    print(f"{GREEN}Successfully{RESET} added {spotify_track_name}!")
+                else:
+                    print(f"{RED}Unsure{RESET}: {ITALIC}{spotify_track_name}{RESET} not in {ITALIC}{vid_name}{RESET}")
+                    unsure.append(vid_name)
             except IndexError:
-                failed_songs.append(vid_name)
-                print(f"{Fore.RED}Failed to add{Fore.RESET} \"{vid_name}\"")
+                failed.append(vid_name)
+                print(f"{RED}Failed to add{RESET} \"{vid_name}\"")
             print()
 
-        if failed_songs:
-            print(f"{Fore.RED}Failed{Fore.RESET} to add {', '.join(f'\"{song_name}\"' for song_name in failed_songs)} to the playlist :(")
+        if unsure:
+            print()
+            print(f"The program was {RED}Unsure{RESET} to add {', '.join(f'{ITALIC}{RED}{song_name}{RESET}' for song_name in unsure)} to the playlist..")
+
+        if failed:
+            print()
+            print(f"{RED}Failed{RESET} to add {', '.join(f'{ITALIC}{RED}{song_name}{RESET}' for song_name in failed)} to the playlist :(")
     
     except SpotifyOauthError:
         print()
